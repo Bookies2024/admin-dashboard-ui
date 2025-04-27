@@ -13,7 +13,8 @@ export const emailTemplate = `
     .header p { color: #58551E; margin: 5px 0 0; }
     .content { padding: 30px; }
     .content h3 { color: #333; }
-    .content p { font-size: 14px; line-height: 1.6; color: #555; }
+    .content p { font-size: 14px; line-height: 1.6; color: #555; margin-block: -2px }
+    .content img { max-width: 100%; }
     .qr-container { text-align: center; margin-bottom: 20px }
     .qr-container img { border-radius: 8px }
     .footer p { color: #333; }
@@ -29,26 +30,20 @@ export const emailTemplate = `
     </div>
     <div class="content">
       {{body}}
-      <div class="footer">
-        <p>
-          Love,<br />
-          <strong>Mumbai Bookies</strong><br />
-        </p>
-        <div style="text-align: center; margin-top: 5px;">
-          <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJTWcXzJYP3H8yawieBN79GIJUZRmd526qgOfY" style="max-width: 100%;"/>
-        </div>
-      </div>
-      <hr style="margin-top: 25px; margin-bottom: 20px;">
-      <div>
-        <p style="text-align: center; font-size: 14px;">
-          Show us the following QR code when you join for your first session.
-        </p>
-        <div class="qr-container">
-          <img src="cid:qr-code" alt="QR Code" width="180" height="180" />
-        </div>
-      </div>
     </div>
   </div>
 </body>
 </html>
+`;
+
+export const qrSection = `
+  <hr style="margin-top: 25px; margin-bottom: 20px;">
+  <div>
+    <p style="text-align: center; font-size: 14px;">
+      Show us the following QR code when you join for your first session.
+    </p>
+    <div class="qr-container">
+      <img src="cid:qr-code" alt="QR Code" width="180" height="180" />
+    </div>
+  </div>
 `;

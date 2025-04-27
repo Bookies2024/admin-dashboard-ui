@@ -9,7 +9,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import MailIcon from '@mui/icons-material/Mail';
 import { Typography } from '@mui/material';
-import { Dashboard, QrCode } from '@mui/icons-material';
+import { Dashboard, QrCode, Settings } from '@mui/icons-material';
 import BookiesLogo from "../assets/bookies_logo.png"
 
 const Sidebar = () => {
@@ -19,13 +19,14 @@ const Sidebar = () => {
   const items = [
     { title: 'Dashboard', icon: <Dashboard />, path: '/', disabled: true },
     { title: 'Mass Mail', icon: <MailIcon />, path: '/mail', disabled: false },
-    { title: 'QR Generator', icon: <QrCode />, path: '/qr', disabled: true }
+    { title: 'QR Generator', icon: <QrCode />, path: '/qr', disabled: true },
+    { title: 'Config', icon: <Settings />, path: '/config', disabled: true }
   ];
 
   return (
     <Drawer variant="permanent" anchor="left">
-      <Box sx={{ width: 250, height: '100%', background: '#FFE6D5' }}>
-        <Box sx={{ p: 2, fontWeight: 'bold', textAlign: 'center' }}>
+      <Box sx={{ width: '16vw', height: '100%', background: '#FFE6D5' }}>
+        <Box sx={{ p: 2, fontWeight: 'bold', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <img src={BookiesLogo} style={{ blockSize: 50 }} />
           <Typography sx={{ fontSize: 18, fontWeight: 'bold' }}>Mumbai Bookies</Typography>
           <Typography variant='subtitle2'>Reading Community</Typography>

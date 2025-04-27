@@ -1,14 +1,14 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const Home = () => {
+const Dashboard = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
     navigate('/mail')
   }, [navigate]);
 
-  return <div>Home</div>
+  return <div>Dashboard</div>
 }
 
-export default Home
+export default Dashboard

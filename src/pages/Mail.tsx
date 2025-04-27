@@ -3,8 +3,11 @@ import {
   Button,
   Chip,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
+  Radio,
+  RadioGroup,
   Select,
   TextField,
   Typography
@@ -15,23 +18,26 @@ import { Upload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-import { emailTemplate } from '../util/templates/emai-template';
+import { emailTemplate, qrSection } from '../util/templates/emai-template';
 
 const Mail = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [selectedEmailColumn, setSelectedEmailColumn] = useState('');
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState(
-    `<p>Hi <strong>{name}</strong>,</p>
-  <p>Welcome to the Mumbai Bookies community</p>
-  <p>I'm glad that you're going to join us this time. We're super excited to read with you!</p>
-  <p>Whether you’re here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p>
-  <p>Please join the WhatsApp group below for location and other updates (don't forget to check the group description)</p>
-  <p><a href="https://chat.whatsapp.com/I4ga8C0mZC6II49RhxgHGg">Click here to join the Whatsapp group</a></p>
-  <p><strong>Please only join if you intend to actually come this Sunday :)</strong></p>
-  <p>SEE YOU ON SUNDAY</p>`
-  );
+  const [subject, setSubject] = useState('YOU MADE IT TO MUMBAI BOOKIES');
+  const [embedQr, setEmbedQr] = useState(true);
+  const [body, setBody] = useState(`
+    <p>Hi,</p><br>
+    <p>Welcome to the Mumbai Bookies community</p><br>
+    <p>I'm glad that you're going to join us this time. We're super excited to read with you!</p><br>
+    <p>Whether you’re here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p><br>
+    <p>Please join the WhatsApp group below for location and other updates (don't forget to check the group description)</p><br>
+    <p><a href="https://chat.whatsapp.com/I4ga8C0mZC6II49RhxgHGg">Click here to join the Whatsapp group</a></p><br>
+    <p><strong>Please only join if you intend to actually come this Sunday :)</strong></p><br>
+    <p>SEE YOU ON SUNDAY</p><br>
+    <p>Love,<br><strong>Mumbai Bookies</strong><br></p><br>
+    <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJTWcXzJYP3H8yawieBN79GIJUZRmd526qgOfY" style="max-width: 100%;"/>
+  `);
 
   const quillRef = useRef<any>(null);
 
@@ -70,14 +76,10 @@ const Mail = () => {
     }
   };
 
-  const renderPreviewBody = (template: string, row: Record<string, any>) => {
-    return template.replace(/\{(.*?)\}/g, (_, key) => row[key.trim()] || '');
-  };
 
   return (
     <PageLayout title="Mass Mail">
-      <Box sx={{ display: 'grid', gap: 2  }}>
-        {/* Main Layout */}
+      <Box>
         <Box
           sx={{
             display: 'grid',
@@ -85,14 +87,12 @@ const Mail = () => {
             gap: 2
           }}
         >
-          <Box sx={{display: 'grid', gap: 2}}>
-            {/* Upload Excel */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box>
               <Button
-                sx={{ bgcolor: '#403d14', boxShadow: 'none' }}
                 component="label"
                 startIcon={<Upload />}
-                variant="contained"
+                variant="outlined"
               >
                 Upload Excel Sheet
                 <input
@@ -104,7 +104,6 @@ const Mail = () => {
               </Button>
             </Box>
 
-            {/* Left Panel */}
             <Box
               sx={{
                 border: '1px solid rgba(0,0,0,0.15)',
@@ -114,7 +113,6 @@ const Mail = () => {
                 gap: 2
               }}
             >
-              {/* Email Column Selector */}
               <FormControl sx={{ minWidth: 220 }} size="small">
                 <InputLabel id="email-col-label">Select Email Column</InputLabel>
                 <Select
@@ -133,8 +131,10 @@ const Mail = () => {
               </FormControl>
 
               <FormControl sx={{ minWidth: 220 }} size="small">
-                <InputLabel id="email-col-label">Select Sender Email</InputLabel>
+                <InputLabel id="sender-email-label">Select Sender Email</InputLabel>
                 <Select
+                  labelId="sender-email-label"
+                  id="sender-email"
                   label="Select Sender Email"
                 >
                   <MenuItem value="">
@@ -143,7 +143,6 @@ const Mail = () => {
                 </Select>
               </FormControl>
 
-              {/* Subject */}
               <TextField
                 fullWidth
                 label="Subject"
@@ -153,12 +152,15 @@ const Mail = () => {
                 onChange={(e) => setSubject(e.target.value)}
               />
 
-              {/* Rich Text Editor */}
               <Box>
                 <Box
                   sx={{
                     '& .ql-editor': {
-                      minHeight: 250
+                      maxHeight: 410,
+                      '& img': {
+                        maxWidth: '200px',
+                        height: 'auto'
+                      }
                     }
                   }}
                 >
@@ -181,7 +183,6 @@ const Mail = () => {
                   />
                 </Box>
 
-                {/* Dynamic Field Insert Chips */}
                 {columns.length > 0 && (
                   <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     {columns.map((col) => (
@@ -197,29 +198,50 @@ const Mail = () => {
                   </Box>
                 )}
               </Box>
-            </Box>
-            <Button variant='contained' sx={{ width: 'fit-content', px: 6, bgcolor: '#403d14', boxShadow:'none' }}>Send</Button>
 
+              <Box>
+                <FormControl component="fieldset">
+                  <Typography variant="subtitle2" gutterBottom>Embed QR Code?</Typography>
+                  <RadioGroup
+                    row
+                    value={embedQr ? 'yes' : 'no'}
+                    onChange={(e) => setEmbedQr(e.target.value === 'yes')}
+                  >
+                    <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+                    <FormControlLabel value="no" control={<Radio />} label="No" />
+                  </RadioGroup>
+                </FormControl>
+              </Box>
+
+            </Box>
+
+            <Button variant="contained" sx={{ width: 'fit-content', px: 6, bgcolor: '#403d14', boxShadow: 'none' }}>
+              Send
+            </Button>
           </Box>
 
-          {/* Right Panel: Preview */}
           <Box
             sx={{
               border: '1px solid rgba(0,0,0,0.15)',
               borderRadius: 2,
               p: 2,
               overflowY: 'auto',
-              maxHeight: 630
+              maxHeight: '90vh'
             }}
           >
+            <Box sx={{ mb: 2 }}>
+              <Typography>
+                <strong>Subject:</strong> {subject}
+              </Typography>
+            </Box>
+
             <div
               dangerouslySetInnerHTML={{
-                __html: emailTemplate.replace('{{body}}', body)
+                __html: emailTemplate.replace('{{body}}', embedQr ? (body + qrSection) : body)
               }}
             />
           </Box>
         </Box>
-
       </Box>
     </PageLayout>
   );
