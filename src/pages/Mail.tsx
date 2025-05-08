@@ -31,7 +31,7 @@ const Mail = () => {
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [selectedEmailColumn, setSelectedEmailColumn] = useState('');
-  const [subject, setSubject] = useState(`YOU MADE IT TO ${currentCity?.toUpperCase().replace(/\s*\(.*?\)\s*/g, '').trim()} BOOKIES`);
+  const [subject, setSubject] = useState(`YOU MADE IT TO ${currentCity?.toUpperCase()?.replace(/\s*\(.*?\)\s*/g, '').trim()} BOOKIES`);
   const [embedQr, setEmbedQr] = useState(false);
   const [senderEmailConfig, setSenderEmailConfig] = useState({
     senderEmail: '',
@@ -39,14 +39,14 @@ const Mail = () => {
   });
   const [body, setBody] = useState(`
     <p>Hi,</p><br>
-    <p>Welcome to the ${currentCity.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies community</p><br>
+    <p>Welcome to the ${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies community</p><br>
     <p>I'm glad that you're going to join us this time. We're super excited to read with you!</p><br>
     <p>Whether you're here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p><br>
     <p>Please join the WhatsApp group below for location and other updates (don't forget to check the group description)</p><br>
     <p><a href="https://chat.whatsapp.com/I4ga8C0mZC6II49RhxgHGg">Click here to join the Whatsapp group</a></p><br>
     <p><strong>Please only join if you intend to actually come this Sunday :)</strong></p><br>
     <p>SEE YOU ON SUNDAY</p><br>
-    <p>Love,<br><strong>${currentCity.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies</strong><br></p><br>
+    <p>Love,<br><strong>${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies</strong><br></p><br>
     <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJTWcXzJYP3H8yawieBN79GIJUZRmd526qgOfY" style="max-width: 100%;"/>
   `);
   const navigate = useNavigate();
@@ -157,7 +157,7 @@ const Mail = () => {
         senderEmail: senderEmailConfig.senderEmail,
         senderAppPassword: senderEmailConfig.senderAppPassword,
         subject,
-        body: (emailTemplate(currentCity.replace(/\s*\(.*?\)\s*/g, '').trim())).replace('{{body}}', embedQr ? (body + qrSection) : body),
+        body: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace('{{body}}', embedQr ? (body + qrSection) : body),
         embedQr,
         emailColumn: selectedEmailColumn,
         excelData
@@ -392,7 +392,7 @@ const Mail = () => {
 
             <div
               dangerouslySetInnerHTML={{
-                __html: (emailTemplate(currentCity.replace(/\s*\(.*?\)\s*/g, '').trim())).replace('{{body}}', embedQr ? (body + qrSection) : body)
+                __html: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace('{{body}}', embedQr ? (body + qrSection) : body)
               }}
             />
           </Box>
