@@ -1,4 +1,4 @@
-export const emailTemplate = `
+export const emailTemplate = (currentCity: string) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +13,7 @@ export const emailTemplate = `
     .header p { color: #58551E; margin: 5px 0 0; }
     .content { padding: 30px; }
     .content h3 { color: #333; }
-    .content p { font-size: 14px; line-height: 1.6; color: #555; margin-block: -2px }
+    .content p { font-size: 14px; color: #555;  line-height: 1.6; margin: 0; padding: 0;}
     .content img { max-width: 100%; }
     .qr-container { text-align: center; margin-bottom: 20px }
     .qr-container img { border-radius: 8px }
@@ -25,7 +25,7 @@ export const emailTemplate = `
   <div class="container">
     <div class="header">
       <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJjDk65sGr25gqFBStewTny4XvmPMYZkRpN6WL" alt="Logo" width="60" height="60" />
-      <h2>Mumbai Bookies</h2>
+      <h2>${currentCity} Bookies</h2>
       <p>Reading Community</p>
     </div>
     <div class="content">

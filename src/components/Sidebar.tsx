@@ -11,10 +11,12 @@ import MailIcon from '@mui/icons-material/Mail';
 import { Typography } from '@mui/material';
 import { Dashboard, QrCode, Settings } from '@mui/icons-material';
 import BookiesLogo from "../assets/bookies_logo.png"
+import { useAuth } from '../hooks/useAuth';
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentCity } = useAuth()
 
   const items = [
     { title: 'Dashboard', icon: <Dashboard />, path: '/', disabled: true },
@@ -28,8 +30,8 @@ const Sidebar = () => {
       <Box sx={{ width: '16vw', height: '100%', background: '#FFE6D5' }}>
         <Box sx={{ p: 2, fontWeight: 'bold', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <img src={BookiesLogo} style={{ blockSize: 50 }} />
-          <Typography sx={{ fontSize: 18, fontWeight: 'bold' }}>Mumbai Bookies</Typography>
-          <Typography variant='subtitle2'>Reading Community</Typography>
+          <Typography color='primary' sx={{ fontSize: 18, fontWeight: 'bold' }}>{currentCity} Bookies</Typography>
+          <Typography color='primary' variant='subtitle2'>Reading Community</Typography>
         </Box>
         <List>
           {items.map((e, i) => {

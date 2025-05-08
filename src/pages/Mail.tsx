@@ -10,38 +10,68 @@ import {
   RadioGroup,
   Select,
   TextField,
-  Typography
+  Typography,
+  Alert,
+  Snackbar,
+  CircularProgress
 } from '@mui/material';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PageLayout from '../layout/PageLayout';
 import { Upload } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { emailTemplate, qrSection } from '../util/templates/emai-template';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { CONFIG_TYPES, ENV } from '../util/constants';
 
 const Mail = () => {
-  const [excelData, setExcelData] = useState<any[]>([]);
-  const [columns, setColumns] = useState<string[]>([]);
+  const { currentCity, config, isAuthenticated } = useAuth();
+  const [excelData, setExcelData] = useState([]);
+  const [columns, setColumns] = useState([]);
   const [selectedEmailColumn, setSelectedEmailColumn] = useState('');
-  const [subject, setSubject] = useState('YOU MADE IT TO MUMBAI BOOKIES');
-  const [embedQr, setEmbedQr] = useState(true);
+  const [subject, setSubject] = useState(`YOU MADE IT TO ${currentCity?.toUpperCase().replace(/\s*\(.*?\)\s*/g, '').trim()} BOOKIES`);
+  const [embedQr, setEmbedQr] = useState(false);
+  const [senderEmailConfig, setSenderEmailConfig] = useState({
+    senderEmail: '',
+    senderAppPassword: ''
+  });
   const [body, setBody] = useState(`
     <p>Hi,</p><br>
-    <p>Welcome to the Mumbai Bookies community</p><br>
+    <p>Welcome to the ${currentCity.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies community</p><br>
     <p>I'm glad that you're going to join us this time. We're super excited to read with you!</p><br>
-    <p>Whether you’re here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p><br>
+    <p>Whether you're here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p><br>
     <p>Please join the WhatsApp group below for location and other updates (don't forget to check the group description)</p><br>
     <p><a href="https://chat.whatsapp.com/I4ga8C0mZC6II49RhxgHGg">Click here to join the Whatsapp group</a></p><br>
     <p><strong>Please only join if you intend to actually come this Sunday :)</strong></p><br>
     <p>SEE YOU ON SUNDAY</p><br>
-    <p>Love,<br><strong>Mumbai Bookies</strong><br></p><br>
+    <p>Love,<br><strong>${currentCity.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies</strong><br></p><br>
     <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJTWcXzJYP3H8yawieBN79GIJUZRmd526qgOfY" style="max-width: 100%;"/>
   `);
+  const navigate = useNavigate();
 
-  const quillRef = useRef<any>(null);
+  // New state variables for handling API responses
+  const [isSending, setIsSending] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const quillRef = useRef(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    console.log(body)
+  }, [body])
+
+  const handleExcelUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -60,11 +90,17 @@ const Mail = () => {
     reader.readAsBinaryString(file);
   };
 
-  const handleEmailColumnChange = (event: any) => {
+  const totalEmailsToSend = React.useMemo(() => {
+    if (!selectedEmailColumn || excelData.length === 0) return 0;
+
+    return excelData.filter((row) => row[selectedEmailColumn]?.toString().trim()).length;
+  }, [selectedEmailColumn, excelData]);
+
+  const handleEmailColumnChange = (event) => {
     setSelectedEmailColumn(event.target.value);
   };
 
-  const insertFieldToken = (field: string) => {
+  const insertFieldToken = (field) => {
     const editor = quillRef.current?.getEditor();
     if (editor) {
       const range = editor.getSelection();
@@ -76,6 +112,88 @@ const Mail = () => {
     }
   };
 
+  const handleCloseSnackbar = () => {
+    setSnackbar({
+      ...snackbar,
+      open: false
+    });
+  };
+
+  // Function to send emails through the API
+  const handleSendEmails = async () => {
+    // Validation
+    if (!selectedEmailColumn) {
+      setSnackbar({
+        open: true,
+        message: 'Please select an email column',
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (!senderEmailConfig.senderEmail || !senderEmailConfig.senderAppPassword) {
+      setSnackbar({
+        open: true,
+        message: 'Please select a sender email',
+        severity: 'error'
+      });
+      return;
+    }
+
+    if (excelData.length === 0) {
+      setSnackbar({
+        open: true,
+        message: 'Please upload an Excel file with data',
+        severity: 'error'
+      });
+      return;
+    }
+
+    try {
+      setIsSending(true);
+
+      // Prepare the request payload according to the API schema
+      const payload = {
+        senderEmail: senderEmailConfig.senderEmail,
+        senderAppPassword: senderEmailConfig.senderAppPassword,
+        subject,
+        body: (emailTemplate(currentCity.replace(/\s*\(.*?\)\s*/g, '').trim())).replace('{{body}}', embedQr ? (body + qrSection) : body),
+        embedQr,
+        emailColumn: selectedEmailColumn,
+        excelData
+      };
+
+      // Make the API call
+      const response = await fetch(`${ENV.EMAIL_BASEURL}/api/send-mails`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: data.message,
+          severity: 'success'
+        });
+      } else {
+        throw new Error(data.message || 'Failed to send emails');
+      }
+    } catch (error) {
+      console.error('Error sending emails:', error);
+      setSnackbar({
+        open: true,
+        message: error.message || 'An error occurred while sending emails',
+        severity: 'error'
+      });
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <PageLayout title="Mass Mail">
@@ -128,6 +246,12 @@ const Mail = () => {
                     </MenuItem>
                   ))}
                 </Select>
+
+                {selectedEmailColumn && (
+                  <Typography variant="caption" color="textSecondary">
+                    Total Emails to be sent: <strong>{totalEmailsToSend}</strong>
+                  </Typography>
+                )}
               </FormControl>
 
               <FormControl sx={{ minWidth: 220 }} size="small">
@@ -136,10 +260,31 @@ const Mail = () => {
                   labelId="sender-email-label"
                   id="sender-email"
                   label="Select Sender Email"
+                  value={senderEmailConfig.senderEmail}
+                  onChange={(e) => {
+                    const selectedKey = e.target.value;
+                    const matched = config?.find(
+                      (item) => item.Type === CONFIG_TYPES.Email && item.Key === selectedKey
+                    );
+
+                    if (matched) {
+                      setSenderEmailConfig({
+                        senderEmail: matched.Key,
+                        senderAppPassword: matched.Value
+                      });
+                    }
+                  }}
                 >
-                  <MenuItem value="">
-                    example@gmail.com
-                  </MenuItem>
+                  {config?.map((e) => {
+                    if (e.Type === CONFIG_TYPES.Email) {
+                      return (
+                        <MenuItem key={e.Key} value={e.Key}>
+                          {e.Key}
+                        </MenuItem>
+                      );
+                    }
+                    return null;
+                  })}
                 </Select>
               </FormControl>
 
@@ -215,8 +360,18 @@ const Mail = () => {
 
             </Box>
 
-            <Button variant="contained" sx={{ width: 'fit-content', px: 6, bgcolor: '#403d14', boxShadow: 'none' }}>
-              Send
+            <Button
+              variant="contained"
+              sx={{ width: 'fit-content', px: 6, bgcolor: '#403d14', boxShadow: 'none' }}
+              onClick={handleSendEmails}
+              disabled={isSending}
+            >
+              {isSending ? (
+                <>
+                  <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                  Sending...
+                </>
+              ) : 'Send'}
             </Button>
           </Box>
 
@@ -237,12 +392,24 @@ const Mail = () => {
 
             <div
               dangerouslySetInnerHTML={{
-                __html: emailTemplate.replace('{{body}}', embedQr ? (body + qrSection) : body)
+                __html: (emailTemplate(currentCity.replace(/\s*\(.*?\)\s*/g, '').trim())).replace('{{body}}', embedQr ? (body + qrSection) : body)
               }}
             />
           </Box>
         </Box>
       </Box>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </PageLayout>
   );
 };

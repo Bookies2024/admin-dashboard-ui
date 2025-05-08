@@ -7,7 +7,9 @@ import Mail from './pages/Mail.tsx'
 import { createTheme, ThemeProvider } from '@mui/material'
 import Auth from './pages/Auth.tsx'
 import Dashboard from './pages/Dashboard.tsx'
-
+import { Provider } from 'react-redux'
+import { store } from './store/store.ts'
+import { AuthProvider } from './context/AuthContext.tsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -35,8 +37,12 @@ const theme = createTheme({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-  <ThemeProvider theme={theme}>
-    <RouterProvider router={router} />
-  </ThemeProvider>
+    <AuthProvider>
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <RouterProvider router={router} />
+        </ThemeProvider>
+      </Provider>
+    </AuthProvider>
   </StrictMode>,
 )
