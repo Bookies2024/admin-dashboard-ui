@@ -1,7 +1,7 @@
 export const ENV = {
     API_KEY: import.meta.env.VITE_API_KEY || "",
     API_ENDPOINT: import.meta.env.VITE_API_ENDPOINT || "",
-    EMAIL_BASEURL: import.meta.env.BASE_URL
+    EMAIL_BASEURL: import.meta.env.VITE_EMAIL_BASEURL || "",
 }
 
 export const POST_REQ_TYPES = {
