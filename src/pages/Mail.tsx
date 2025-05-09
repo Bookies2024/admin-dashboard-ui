@@ -25,6 +25,7 @@ import { emailTemplate, qrSection } from '../util/templates/emai-template';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { CONFIG_TYPES, ENV } from '../util/constants';
+import axios from 'axios';
 
 const Mail = () => {
   const { currentCity, config, isAuthenticated } = useAuth();
@@ -39,14 +40,14 @@ const Mail = () => {
   });
   const [body, setBody] = useState(`
     <p>Hi,</p><br>
-    <p>Welcome to the ${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies community</p><br>
+    <p>Welcome to the ${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies community</p><br>
     <p>I'm glad that you're going to join us this time. We're super excited to read with you!</p><br>
     <p>Whether you're here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p><br>
     <p>Please join the WhatsApp group below for location and other updates (don't forget to check the group description)</p><br>
     <p><a href="https://chat.whatsapp.com/I4ga8C0mZC6II49RhxgHGg">Click here to join the Whatsapp group</a></p><br>
     <p><strong>Please only join if you intend to actually come this Sunday :)</strong></p><br>
     <p>SEE YOU ON SUNDAY</p><br>
-    <p>Love,<br><strong>${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim() } Bookies</strong><br></p><br>
+    <p>Love,<br><strong>${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies</strong><br></p><br>
     <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJTWcXzJYP3H8yawieBN79GIJUZRmd526qgOfY" style="max-width: 100%;"/>
   `);
   const navigate = useNavigate();
@@ -157,38 +158,40 @@ const Mail = () => {
         senderEmail: senderEmailConfig.senderEmail,
         senderAppPassword: senderEmailConfig.senderAppPassword,
         subject,
-        body: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace('{{body}}', embedQr ? (body + qrSection) : body),
+        body: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace(
+          '{{body}}',
+          embedQr ? (body + qrSection) : body
+        ),
         embedQr,
         emailColumn: selectedEmailColumn,
         excelData
       };
 
-      // Make the API call
-      const response = await fetch(`${ENV.EMAIL_BASEURL}/api/send-mails`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      // Make the API call using axios with a 15-minute timeout
+      const response = await axios.post(
+        `${ENV.EMAIL_BASEURL}/api/send-mails`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 15 * 60 * 1000, // 15 minutes
+        }
+      );
+
+      setSnackbar({
+        open: true,
+        message: response.data.message,
+        severity: 'success',
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setSnackbar({
-          open: true,
-          message: data.message,
-          severity: 'success'
-        });
-      } else {
-        throw new Error(data.message || 'Failed to send emails');
-      }
     } catch (error) {
       console.error('Error sending emails:', error);
       setSnackbar({
         open: true,
-        message: error.message || 'An error occurred while sending emails',
-        severity: 'error'
+        message:
+          error.response?.data?.message || error.message || 'An error occurred while sending emails',
+        severity: 'error',
       });
     } finally {
       setIsSending(false);
