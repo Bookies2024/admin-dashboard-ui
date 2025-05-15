@@ -2,19 +2,21 @@ import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 
 type config = {
-    type: string,
-    value: string,
-    key: string,
+    Type: string,
+    Value: string,
+    Key: string,
 }
 
 interface AuthStateType {
     isLoggedIn: boolean;
-    config: config[] | null
+    config: config[] | null,
+    city: string | null
 }
 
 const initialState: AuthStateType = {
     isLoggedIn: false,
-    config: null
+    config: null,
+    city: null
 }
 
 const authSlice = createSlice({
@@ -22,13 +24,15 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         setConfig: (state, { payload }) => {
-            const { config } = payload
+            const { config, city } = payload
             state.config = config
+            state.city = city;
             state.isLoggedIn = true
         },
         logout: (state) => {
             state.config = null;
-            state.isLoggedIn = false
+            state.city = null;
+            state.isLoggedIn = false;
         }
     }
 })

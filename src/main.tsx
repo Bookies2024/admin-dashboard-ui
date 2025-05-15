@@ -8,8 +8,8 @@ import { createTheme, ThemeProvider } from '@mui/material'
 import Auth from './pages/Auth.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import { Provider } from 'react-redux'
-import { store } from './store/store.ts'
-import { AuthProvider } from './context/AuthContext.tsx'
+import { persistor, store } from './store/store.ts'
+import { PersistGate } from 'redux-persist/integration/react'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -37,12 +37,12 @@ const theme = createTheme({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthProvider>
-      <Provider store={store}>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider theme={theme}>
           <RouterProvider router={router} />
         </ThemeProvider>
-      </Provider>
-    </AuthProvider>
+      </PersistGate>
+    </Provider>
   </StrictMode>,
 )

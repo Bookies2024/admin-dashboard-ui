@@ -7,8 +7,9 @@ import {
 import React, { useEffect, useState } from 'react';
 import BookiesLogo from "../assets/bookies_logo.png";
 import { getCities, login } from '../api/api';
-import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setConfig } from '../store/auth/auth-slice';
 
 const Auth = () => {
   const [cities, setCities] = useState<string[] | null>(null);
@@ -16,8 +17,8 @@ const Auth = () => {
   const [passkey, setPasskey] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { setConfig, setIsAuthenticated, setCurrentCity } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch()
 
   useEffect(() => {
     (async () => {
@@ -42,9 +43,7 @@ const Auth = () => {
     setIsLoading(true);
     try {
       const res = await login(selectedCity, passkey);
-      setConfig(res);
-      setIsAuthenticated(true);
-      setCurrentCity(selectedCity);
+      dispatch(setConfig({ config: res, city: selectedCity }))
       navigate('/mail');
     } catch (err) {
       alert('Login failed. Please check credentials.');
@@ -67,7 +66,7 @@ const Auth = () => {
       height: '100vh',
       bgcolor: '#FFE6D5'
     }}>
-      <Box sx={{ display: 'grid', gap: 4, mt: -16 }}>
+      <Box sx={{ display: 'grid', gap: 4, mt: -10 }}>
         <Box sx={{
           p: 2, fontWeight: 'bold',
           display: 'flex', flexDirection: 'column',

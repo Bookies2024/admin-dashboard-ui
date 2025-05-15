@@ -22,17 +22,19 @@ import * as XLSX from 'xlsx';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { emailTemplate, qrSection } from '../util/templates/emai-template';
-import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { CONFIG_TYPES, ENV } from '../util/constants';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 
 const Mail = () => {
-  const { currentCity, config, isAuthenticated } = useAuth();
+  const { isLoggedIn, config, city } = useSelector((state: RootState) => state.auth)
+  // const { currentCity, config } = useAuth();
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [selectedEmailColumn, setSelectedEmailColumn] = useState('');
-  const [subject, setSubject] = useState(`YOU MADE IT TO ${currentCity?.toUpperCase()?.replace(/\s*\(.*?\)\s*/g, '').trim()} BOOKIES`);
+  const [subject, setSubject] = useState(`YOU MADE IT TO ${city?.toUpperCase()?.replace(/\s*\(.*?\)\s*/g, '').trim()} BOOKIES`);
   const [embedQr, setEmbedQr] = useState(false);
   const [senderEmailConfig, setSenderEmailConfig] = useState({
     senderEmail: '',
@@ -40,14 +42,14 @@ const Mail = () => {
   });
   const [body, setBody] = useState(`
     <p>Hi,</p><br>
-    <p>Welcome to the ${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies community</p><br>
+    <p>Welcome to the ${city?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies community</p><br>
     <p>I'm glad that you're going to join us this time. We're super excited to read with you!</p><br>
     <p>Whether you're here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p><br>
     <p>Please join the WhatsApp group below for location and other updates (don't forget to check the group description)</p><br>
     <p><a href="https://chat.whatsapp.com/I4ga8C0mZC6II49RhxgHGg">Click here to join the Whatsapp group</a></p><br>
     <p><strong>Please only join if you intend to actually come this Sunday :)</strong></p><br>
     <p>SEE YOU ON SUNDAY</p><br>
-    <p>Love,<br><strong>${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies</strong><br></p><br>
+    <p>Love,<br><strong>${city?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies</strong><br></p><br>
     <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJTWcXzJYP3H8yawieBN79GIJUZRmd526qgOfY" style="max-width: 100%;"/>
   `);
   const navigate = useNavigate();
@@ -63,10 +65,10 @@ const Mail = () => {
   const quillRef = useRef(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoggedIn) {
       navigate('/login');
     }
-  }, [isAuthenticated]);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     console.log(body)
@@ -158,7 +160,7 @@ const Mail = () => {
         senderEmail: senderEmailConfig.senderEmail,
         senderAppPassword: senderEmailConfig.senderAppPassword,
         subject,
-        body: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace(
+        body: (emailTemplate(city?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace(
           '{{body}}',
           embedQr ? (body + qrSection) : body
         ),
@@ -395,7 +397,7 @@ const Mail = () => {
 
             <div
               dangerouslySetInnerHTML={{
-                __html: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace('{{body}}', embedQr ? (body + qrSection) : body)
+                __html: (emailTemplate(city?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace('{{body}}', embedQr ? (body + qrSection) : body)
               }}
             />
           </Box>
