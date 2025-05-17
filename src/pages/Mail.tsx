@@ -214,50 +214,47 @@ const Mail = () => {
           }}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box >
-              <FormControl sx={{ minWidth: 300 }} size="small">
-                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1 }}>
-                  <Box width="100%">
-                    <InputLabel id="email-col-label">{loadingEmails ? "Loading..." : "Select Email Column"}</InputLabel>
-                    <Select
-                      labelId="email-col-label"
-                      id="email-col"
-                      value={selectedEmailColumn}
-                      label="Select Email Column"
-                      onChange={handleEmailColumnChange}
-                      fullWidth
-                      disabled={loadingEmails}
-                    >
-                      {columns.map((col) => (
-                        <MenuItem key={col} value={col}>
-                          {col}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                <FormControl size="small" sx={{ flex: 1 }}>
+                  <InputLabel id="email-col-label">
+                    {loadingEmails ? "Loading..." : "Select Email Column"}
+                  </InputLabel>
+                  <Select
+                    labelId="email-col-label"
+                    id="email-col"
+                    value={selectedEmailColumn}
+                    label="Select Email Column"
+                    onChange={handleEmailColumnChange}
+                    disabled={loadingEmails}
+                    fullWidth
+                  >
+                    {columns.map((col) => (
+                      <MenuItem key={col} value={col}>
+                        {col}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
-                  <Box>
-                    <Button
-                      disabled={loadingEmails}
-                      onClick={fetchEmailData}
-                      variant="outlined"
-                      sx={{ aspectRatio: '1 / 1', p: 0, minWidth: 0, height: 40, }}
-                    >
-                      <Sync />
-                    </Button>
-                  </Box>
-                </Box>
+                <Button
+                  disabled={loadingEmails}
+                  onClick={fetchEmailData}
+                  variant="outlined"
+                  sx={{ aspectRatio: '1 / 1', p: 0, minWidth: 0, height: 40 }}
+                >
+                  <Sync />
+                </Button>
+              </Box>
 
-                <Box>
-                  {selectedEmailColumn && (
-                    <Typography variant="caption" color="textSecondary" minWidth='100%'>
-                      Total Emails to be sent: <strong>{totalEmailsToSend}</strong>
-                    </Typography>
-                  )}
+              {selectedEmailColumn && (
+                <Box px="16px">
+                  <Typography variant='subtitle2' color="#58551E">
+                    Total: <strong>{totalEmailsToSend}</strong>
+                  </Typography>
                 </Box>
-              </FormControl>
+              )}
             </Box>
-
             <Box
               sx={{
                 border: '1px solid rgba(0,0,0,0.15)',
