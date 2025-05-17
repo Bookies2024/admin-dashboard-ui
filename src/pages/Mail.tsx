@@ -17,8 +17,6 @@ import {
 } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import PageLayout from '../layout/PageLayout';
-import { Upload } from '@mui/icons-material';
-import * as XLSX from 'xlsx';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { emailTemplate, qrSection } from '../util/templates/emai-template';
@@ -27,6 +25,8 @@ import { CONFIG_TYPES, ENV } from '../util/constants';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
+import { getEmails } from '../api/api';
+import { Sync } from '@mui/icons-material';
 
 const Mail = () => {
   const { isLoggedIn, config, city } = useSelector((state: RootState) => state.auth)
@@ -61,6 +61,7 @@ const Mail = () => {
     message: '',
     severity: 'success'
   });
+  const [loadingEmails, setLoadingEmails] = useState(false);  // new loading state
 
   const quillRef = useRef(null);
 
@@ -70,28 +71,30 @@ const Mail = () => {
     }
   }, [isLoggedIn]);
 
-  useEffect(() => {
-    console.log(body)
-  }, [body])
-
-  const handleExcelUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      const cols = jsonData.length > 0 ? Object.keys(jsonData[0]) : [];
-
-      setExcelData(jsonData);
-      setColumns(cols);
-    };
-    reader.readAsBinaryString(file);
+  const fetchEmailData = async () => {
+    setLoadingEmails(true);
+    try {
+      const data = await getEmails(city)
+      if (data?.length > 0) {
+        const keys = Object.keys(data[0]);
+        setColumns(keys);
+        setExcelData(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch email data', err);
+      setSnackbar({
+        open: true,
+        message: 'Failed to fetch email data from API',
+        severity: 'error',
+      });
+    } finally {
+      setLoadingEmails(false);
+    }
   };
+
+  useEffect(() => {
+    fetchEmailData();
+  }, []);
 
   const totalEmailsToSend = React.useMemo(() => {
     if (!selectedEmailColumn || excelData.length === 0) return 0;
@@ -211,20 +214,48 @@ const Mail = () => {
           }}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box>
-              <Button
-                component="label"
-                startIcon={<Upload />}
-                variant="outlined"
-              >
-                Upload Excel Sheet
-                <input
-                  type="file"
-                  hidden
-                  accept=".xlsx, .xls"
-                  onChange={handleExcelUpload}
-                />
-              </Button>
+            <Box >
+              <FormControl sx={{ minWidth: 300 }} size="small">
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', gap: 1 }}>
+                  <Box width="100%">
+                    <InputLabel id="email-col-label">{loadingEmails ? "Loading..." : "Select Email Column"}</InputLabel>
+                    <Select
+                      labelId="email-col-label"
+                      id="email-col"
+                      value={selectedEmailColumn}
+                      label="Select Email Column"
+                      onChange={handleEmailColumnChange}
+                      fullWidth
+                      disabled={loadingEmails}
+                    >
+                      {columns.map((col) => (
+                        <MenuItem key={col} value={col}>
+                          {col}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </Box>
+
+                  <Box>
+                    <Button
+                      disabled={loadingEmails}
+                      onClick={fetchEmailData}
+                      variant="outlined"
+                      sx={{ aspectRatio: '1 / 1', p: 0, minWidth: 0, height: 40, }}
+                    >
+                      <Sync />
+                    </Button>
+                  </Box>
+                </Box>
+
+                <Box>
+                  {selectedEmailColumn && (
+                    <Typography variant="caption" color="textSecondary" minWidth='100%'>
+                      Total Emails to be sent: <strong>{totalEmailsToSend}</strong>
+                    </Typography>
+                  )}
+                </Box>
+              </FormControl>
             </Box>
 
             <Box
@@ -236,29 +267,6 @@ const Mail = () => {
                 gap: 2
               }}
             >
-              <FormControl sx={{ minWidth: 220 }} size="small">
-                <InputLabel id="email-col-label">Select Email Column</InputLabel>
-                <Select
-                  labelId="email-col-label"
-                  id="email-col"
-                  value={selectedEmailColumn}
-                  label="Select Email Column"
-                  onChange={handleEmailColumnChange}
-                >
-                  {columns.map((col) => (
-                    <MenuItem key={col} value={col}>
-                      {col}
-                    </MenuItem>
-                  ))}
-                </Select>
-
-                {selectedEmailColumn && (
-                  <Typography variant="caption" color="textSecondary">
-                    Total Emails to be sent: <strong>{totalEmailsToSend}</strong>
-                  </Typography>
-                )}
-              </FormControl>
-
               <FormControl sx={{ minWidth: 220 }} size="small">
                 <InputLabel id="sender-email-label">Select Sender Email</InputLabel>
                 <Select
@@ -349,7 +357,7 @@ const Mail = () => {
                 )}
               </Box>
 
-              <Box>
+              {/* <Box>
                 <FormControl component="fieldset">
                   <Typography variant="subtitle2" gutterBottom>Embed QR Code?</Typography>
                   <RadioGroup
@@ -361,7 +369,7 @@ const Mail = () => {
                     <FormControlLabel value="no" control={<Radio />} label="No" />
                   </RadioGroup>
                 </FormControl>
-              </Box>
+              </Box> */}
 
             </Box>
 
