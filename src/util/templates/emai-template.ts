@@ -25,8 +25,10 @@ export const emailTemplate = (currentCity: string) => `
   <div class="container">
     <div class="header">
       <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJjDk65sGr25gqFBStewTny4XvmPMYZkRpN6WL" alt="Logo" width="60" height="60" />
-      <h2>${currentCity} Bookies</h2>
-      <p>Reading Community</p>
+      <div>
+        <h2>${currentCity} Bookies</h2>
+        <p>Reading Community</p>
+      </div>
     </div>
     <div class="content">
       {{body}}

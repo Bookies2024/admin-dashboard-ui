@@ -11,6 +11,16 @@ export const getCities = async () => {
     }
 }
 
+export const getEmails = async (city: string) => {
+    try {
+        const res = await axios.get(`${ENV.EMAILS_API_ENDPOINT}?key=${ENV.API_KEY}&city=${city}`)
+        return res?.data?.data;
+    } catch (error) {
+        console.error(error)
+        throw error;
+    }
+}
+
 export const login = async (city: string, password: string) => {
     try {
         const res = await axios.post(

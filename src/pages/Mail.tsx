@@ -17,22 +17,24 @@ import {
 } from '@mui/material';
 import React, { useState, useRef, useEffect } from 'react';
 import PageLayout from '../layout/PageLayout';
-import { Upload } from '@mui/icons-material';
-import * as XLSX from 'xlsx';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { emailTemplate, qrSection } from '../util/templates/emai-template';
-import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { CONFIG_TYPES, ENV } from '../util/constants';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import { getEmails } from '../api/api';
+import { Sync } from '@mui/icons-material';
 
 const Mail = () => {
-  const { currentCity, config, isAuthenticated } = useAuth();
+  const { isLoggedIn, config, city } = useSelector((state: RootState) => state.auth)
+  // const { currentCity, config } = useAuth();
   const [excelData, setExcelData] = useState([]);
   const [columns, setColumns] = useState([]);
   const [selectedEmailColumn, setSelectedEmailColumn] = useState('');
-  const [subject, setSubject] = useState(`YOU MADE IT TO ${currentCity?.toUpperCase()?.replace(/\s*\(.*?\)\s*/g, '').trim()} BOOKIES`);
+  const [subject, setSubject] = useState(`YOU MADE IT TO ${city?.toUpperCase()?.replace(/\s*\(.*?\)\s*/g, '').trim()} BOOKIES`);
   const [embedQr, setEmbedQr] = useState(false);
   const [senderEmailConfig, setSenderEmailConfig] = useState({
     senderEmail: '',
@@ -40,14 +42,14 @@ const Mail = () => {
   });
   const [body, setBody] = useState(`
     <p>Hi,</p><br>
-    <p>Welcome to the ${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies community</p><br>
+    <p>Welcome to the ${city?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies community</p><br>
     <p>I'm glad that you're going to join us this time. We're super excited to read with you!</p><br>
     <p>Whether you're here to dive into the depths of literature, discover hidden gems, or simply enjoy the company of fellow book lovers, this community is going to be a space where we read, and we can belong!</p><br>
     <p>Please join the WhatsApp group below for location and other updates (don't forget to check the group description)</p><br>
     <p><a href="https://chat.whatsapp.com/I4ga8C0mZC6II49RhxgHGg">Click here to join the Whatsapp group</a></p><br>
     <p><strong>Please only join if you intend to actually come this Sunday :)</strong></p><br>
     <p>SEE YOU ON SUNDAY</p><br>
-    <p>Love,<br><strong>${currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies</strong><br></p><br>
+    <p>Love,<br><strong>${city?.replace(/\s*\(.*?\)\s*/g, '').trim()} Bookies</strong><br></p><br>
     <img src="https://c2w85ig2lt.ufs.sh/f/elHNGJqHN4xJTWcXzJYP3H8yawieBN79GIJUZRmd526qgOfY" style="max-width: 100%;"/>
   `);
   const navigate = useNavigate();
@@ -59,37 +61,40 @@ const Mail = () => {
     message: '',
     severity: 'success'
   });
+  const [loadingEmails, setLoadingEmails] = useState(false);  // new loading state
 
   const quillRef = useRef(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoggedIn) {
       navigate('/login');
     }
-  }, [isAuthenticated]);
+  }, [isLoggedIn]);
+
+  const fetchEmailData = async () => {
+    setLoadingEmails(true);
+    try {
+      const data = await getEmails(city)
+      if (data?.length > 0) {
+        const keys = Object.keys(data[0]);
+        setColumns(keys);
+        setExcelData(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch email data', err);
+      setSnackbar({
+        open: true,
+        message: 'Failed to fetch email data from API',
+        severity: 'error',
+      });
+    } finally {
+      setLoadingEmails(false);
+    }
+  };
 
   useEffect(() => {
-    console.log(body)
-  }, [body])
-
-  const handleExcelUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      const cols = jsonData.length > 0 ? Object.keys(jsonData[0]) : [];
-
-      setExcelData(jsonData);
-      setColumns(cols);
-    };
-    reader.readAsBinaryString(file);
-  };
+    fetchEmailData();
+  }, []);
 
   const totalEmailsToSend = React.useMemo(() => {
     if (!selectedEmailColumn || excelData.length === 0) return 0;
@@ -158,7 +163,7 @@ const Mail = () => {
         senderEmail: senderEmailConfig.senderEmail,
         senderAppPassword: senderEmailConfig.senderAppPassword,
         subject,
-        body: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace(
+        body: (emailTemplate(city?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace(
           '{{body}}',
           embedQr ? (body + qrSection) : body
         ),
@@ -209,22 +214,47 @@ const Mail = () => {
           }}
         >
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Box>
-              <Button
-                component="label"
-                startIcon={<Upload />}
-                variant="outlined"
-              >
-                Upload Excel Sheet
-                <input
-                  type="file"
-                  hidden
-                  accept=".xlsx, .xls"
-                  onChange={handleExcelUpload}
-                />
-              </Button>
-            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                <FormControl size="small" sx={{ flex: 1 }}>
+                  <InputLabel id="email-col-label">
+                    {loadingEmails ? "Loading..." : "Select Email Column"}
+                  </InputLabel>
+                  <Select
+                    labelId="email-col-label"
+                    id="email-col"
+                    value={selectedEmailColumn}
+                    label="Select Email Column"
+                    onChange={handleEmailColumnChange}
+                    disabled={loadingEmails}
+                    fullWidth
+                  >
+                    {columns.map((col) => (
+                      <MenuItem key={col} value={col}>
+                        {col}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
+                <Button
+                  disabled={loadingEmails}
+                  onClick={fetchEmailData}
+                  variant="outlined"
+                  sx={{ aspectRatio: '1 / 1', p: 0, minWidth: 0, height: 40 }}
+                >
+                  <Sync />
+                </Button>
+              </Box>
+
+              {selectedEmailColumn && (
+                <Box px="16px">
+                  <Typography variant='subtitle2' color="#58551E">
+                    Total: <strong>{totalEmailsToSend}</strong>
+                  </Typography>
+                </Box>
+              )}
+            </Box>
             <Box
               sx={{
                 border: '1px solid rgba(0,0,0,0.15)',
@@ -234,29 +264,6 @@ const Mail = () => {
                 gap: 2
               }}
             >
-              <FormControl sx={{ minWidth: 220 }} size="small">
-                <InputLabel id="email-col-label">Select Email Column</InputLabel>
-                <Select
-                  labelId="email-col-label"
-                  id="email-col"
-                  value={selectedEmailColumn}
-                  label="Select Email Column"
-                  onChange={handleEmailColumnChange}
-                >
-                  {columns.map((col) => (
-                    <MenuItem key={col} value={col}>
-                      {col}
-                    </MenuItem>
-                  ))}
-                </Select>
-
-                {selectedEmailColumn && (
-                  <Typography variant="caption" color="textSecondary">
-                    Total Emails to be sent: <strong>{totalEmailsToSend}</strong>
-                  </Typography>
-                )}
-              </FormControl>
-
               <FormControl sx={{ minWidth: 220 }} size="small">
                 <InputLabel id="sender-email-label">Select Sender Email</InputLabel>
                 <Select
@@ -304,7 +311,8 @@ const Mail = () => {
                 <Box
                   sx={{
                     '& .ql-editor': {
-                      maxHeight: 410,
+                      minHeight: 500,
+                      maxHeight: 500,
                       '& img': {
                         maxWidth: '200px',
                         height: 'auto'
@@ -332,7 +340,7 @@ const Mail = () => {
                 </Box>
 
                 {columns.length > 0 && (
-                  <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     {columns.map((col) => (
                       <Chip
                         key={col}
@@ -347,7 +355,7 @@ const Mail = () => {
                 )}
               </Box>
 
-              <Box>
+              {/* <Box>
                 <FormControl component="fieldset">
                   <Typography variant="subtitle2" gutterBottom>Embed QR Code?</Typography>
                   <RadioGroup
@@ -359,7 +367,7 @@ const Mail = () => {
                     <FormControlLabel value="no" control={<Radio />} label="No" />
                   </RadioGroup>
                 </FormControl>
-              </Box>
+              </Box> */}
 
             </Box>
 
@@ -395,7 +403,7 @@ const Mail = () => {
 
             <div
               dangerouslySetInnerHTML={{
-                __html: (emailTemplate(currentCity?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace('{{body}}', embedQr ? (body + qrSection) : body)
+                __html: (emailTemplate(city?.replace(/\s*\(.*?\)\s*/g, '').trim()))?.replace('{{body}}', embedQr ? (body + qrSection) : body)
               }}
             />
           </Box>
