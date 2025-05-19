@@ -311,7 +311,8 @@ const Mail = () => {
                 <Box
                   sx={{
                     '& .ql-editor': {
-                      maxHeight: 410,
+                      minHeight: 500,
+                      maxHeight: 500,
                       '& img': {
                         maxWidth: '200px',
                         height: 'auto'
@@ -339,7 +340,7 @@ const Mail = () => {
                 </Box>
 
                 {columns.length > 0 && (
-                  <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     {columns.map((col) => (
                       <Chip
                         key={col}
