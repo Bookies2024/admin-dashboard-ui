@@ -5,6 +5,7 @@ type config = {
     Type: string,
     Value: string,
     Key: string,
+    ["Footer Image"]?: string
 }
 
 interface AuthStateType {
