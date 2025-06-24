@@ -1,11 +1,19 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ENV, POST_REQ_TYPES } from "../../util/constants"
+import { apiSlice } from "../services/api-slice";
 
-const apiSlice = createApi({
-    baseQuery: fetchBaseQuery({
-        baseUrl: 'https://google.com',
-        prepareHeaders: (headers) => {
-            return headers
-        }
+export const authApiSlice = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    login: builder.mutation({
+      query: ({ city, password }) => ({
+        url: `?key=${ENV.API_KEY}&type=${POST_REQ_TYPES.AUTH}`,
+        method: "POST",
+        body: JSON.stringify({ city, password }),
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+      }),
     }),
-    endpoints: () => ({}),
-}) 
+  }),
+  overrideExisting: false,
+})
+
+export const { useLoginMutation } = authApiSlice

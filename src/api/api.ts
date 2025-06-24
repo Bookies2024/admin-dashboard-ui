@@ -11,6 +11,16 @@ export const getCities = async () => {
     }
 }
 
+export const getStats = async (city: string) => {
+    try {
+        const res = await axios.get(`${ENV.API_ENDPOINT}?key=${ENV.API_KEY}&reqType=${GET_REQ_TYPES.STATS}&city=${city}`)
+        return res?.data;
+    } catch (error) {
+        console.error(error)
+        throw error;
+    }
+}
+
 export const getEmails = async (city: string) => {
     try {
         const res = await axios.get(`${ENV.EMAILS_API_ENDPOINT}?key=${ENV.API_KEY}&city=${city}`)

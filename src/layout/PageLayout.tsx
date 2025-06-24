@@ -1,9 +1,10 @@
 import { Logout } from '@mui/icons-material'
 import { Box, Button, Typography } from '@mui/material'
-import React from 'react'
-import { useDispatch } from 'react-redux'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { logout } from '../store/auth/auth-slice'
 import { useNavigate } from 'react-router-dom'
+import { RootState } from '../store/store'
 
 interface PageLayoutProps {
   title: string
@@ -11,12 +12,19 @@ interface PageLayoutProps {
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({ title, children }) => {
+  const { isLoggedIn } = useSelector((state: RootState) => state.auth)
   const dispatch = useDispatch();
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login');
+    }
+  }, [isLoggedIn, navigate]);
+
   const handleLogout = () => {
     dispatch(logout())
-    navigate('/')
+    navigate('/login')
   }
 
   return (
