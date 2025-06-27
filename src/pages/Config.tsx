@@ -150,7 +150,17 @@ const Config: React.FC = () => {
             <em style={{ color: 'gray' }}>None</em>
           ),
       },
-      { field: 'qrPrefix', headerName: 'QR Prefix', flex: 2, editable: true },
+      {
+        field: 'qrPrefix', headerName: 'QR Prefix', flex: 2, editable: true,
+        renderCell: (params) =>
+          params.row.type === 'email' ? (
+            <span style={{ color: 'gray' }}>—</span>
+          ) : params.value ? (
+            <span>{params.value}</span>
+          ) : (
+            <em style={{ color: 'gray' }}>None</em>
+          ),
+      },
       {
         field: 'actions',
         type: 'actions',
