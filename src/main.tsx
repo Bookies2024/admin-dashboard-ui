@@ -11,6 +11,7 @@ import { Provider } from 'react-redux'
 import { persistor, store } from './store/store.ts'
 import { PersistGate } from 'redux-persist/integration/react'
 import Config from './pages/Config.tsx'
+import GenerateQR from './pages/GenerateQR.tsx'
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
@@ -19,6 +20,7 @@ const router = createBrowserRouter(
         <Route index element={<Dashboard />} />
         <Route path='mail' element={<Mail />} />
         <Route path='config' element={<Config />} />
+        <Route path='generate-qr' element={<GenerateQR />} />
         {/* <Route path='*' element={<PageNotFound />} /> */}
       </Route>
     </>

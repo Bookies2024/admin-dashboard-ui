@@ -25,3 +25,11 @@ export const CONFIG_TYPES = {
     CITY: 'city',
     Email: "email"
 }
+
+export const CONFIG_HEADERS = {
+    TYPE: 'Type',
+    KEY: 'Key',
+    Value: 'Value',
+    FOOTER_IMAGE: 'Footer Image',
+    QR_PREFIX: 'QR Prefix'
+}

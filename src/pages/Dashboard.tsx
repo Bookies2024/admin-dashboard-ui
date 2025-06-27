@@ -111,7 +111,7 @@ const Dashboard = () => {
         sx={{
           display: 'grid',
           gridTemplateColumns: '1fr 5fr',
-          height: 'calc(100vh - 320px)',
+          height: 'calc(100vh - 310px)',
           mt: 2,
         }}
       >

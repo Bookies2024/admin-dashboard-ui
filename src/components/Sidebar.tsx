@@ -22,7 +22,7 @@ const Sidebar = () => {
   const items = [
     { title: 'Dashboard', icon: <Dashboard />, path: '/', disabled: false },
     { title: 'Bulk Mail', icon: <MailIcon />, path: '/mail', disabled: false },
-    { title: 'Generate QR', icon: <QrCode />, path: '/generate-qr', disabled: true },
+    { title: 'Generate QR', icon: <QrCode />, path: '/generate-qr', disabled: false },
     { title: 'Config', icon: <Settings />, path: '/config', disabled: false }
   ];
 

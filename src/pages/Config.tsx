@@ -21,6 +21,7 @@ import { setConfig } from '../store/auth/auth-slice';
 import { RootState } from '../store/store';
 import { useUpdateConfigMutation } from '../store/app/app-api-slice';
 import { useNavigate } from 'react-router-dom';
+import { CONFIG_HEADERS } from '../util/constants';
 
 type ConfigRow = {
   id: number;
@@ -56,7 +57,8 @@ const Config: React.FC = () => {
         type: cfg.Type as 'city' | 'email',
         key: cfg.Key,
         value: cfg.Value,
-        footerImage: cfg['Footer Image'] ?? '',
+        footerImage: cfg[CONFIG_HEADERS.FOOTER_IMAGE] ?? '',
+        qrPrefix: cfg[CONFIG_HEADERS.QR_PREFIX] ?? '',
       })) ?? [],
     [reduxConfig]
   );
@@ -148,6 +150,7 @@ const Config: React.FC = () => {
             <em style={{ color: 'gray' }}>None</em>
           ),
       },
+      { field: 'qrPrefix', headerName: 'QR Prefix', flex: 2, editable: true },
       {
         field: 'actions',
         type: 'actions',
