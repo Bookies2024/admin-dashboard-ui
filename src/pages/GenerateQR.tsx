@@ -28,6 +28,9 @@ const GenerateQR: React.FC = () => {
 
   const generatePDF = async () => {
     setIsGeneratingPDF(true);
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     const idPrefix = config.find(cfg => cfg?.Key === city)?.[CONFIG_HEADERS.QR_PREFIX]
     const prefix = `qr-checkin.thebookies.org/${city.toLowerCase()}/${idPrefix}`;
     const cityCode = prefix.split('/').pop() || '';
@@ -50,7 +53,7 @@ const GenerateQR: React.FC = () => {
       if (page > 0) pdf.addPage();
       page++;
 
-      // Grid
+      // Draw grid
       pdf.setDrawColor(gridLineColor);
       pdf.setLineWidth(gridLineWidth);
       pdf.setLineDashPattern([3, 2], 0);
@@ -112,14 +115,13 @@ const GenerateQR: React.FC = () => {
         }}
       >
         {/* Controls */}
-        <Box sx={{ paddingBottom: 2 }}>
+        <Box sx={{ paddingBottom: 2, display: 'flex', gap: 1 }}>
           <TextField
             label="Start Number"
             type="number"
             size='small'
             value={startNumber}
             onChange={(e) => setStartNumber(Number(e.target.value))}
-            style={{ marginRight: 8 }}
           />
           <TextField
             label="End Number"
@@ -127,10 +129,9 @@ const GenerateQR: React.FC = () => {
             size='small'
             value={endNumber}
             onChange={(e) => setEndNumber(Number(e.target.value))}
-            style={{ marginRight: 8 }}
           />
-          <Button variant="contained" onClick={generatePDF} disabled={isGeneratingPDF} sx={{boxShadow: 'none'}}>
-            {isGeneratingPDF ? <CircularProgress size={24} /> : 'Generate'}
+          <Button variant="contained" onClick={generatePDF} disabled={isGeneratingPDF} sx={{ boxShadow: 'none' }}>
+            {isGeneratingPDF ? <CircularProgress sx={{ color: 'white' }} disableShrink size={28} /> : 'Generate'}
           </Button>
         </Box>
 
@@ -161,7 +162,7 @@ const GenerateQR: React.FC = () => {
                 letterSpacing: 2,
               }}
             >
-              {isGeneratingPDF ? "Generating" : "Preview"}
+              Preview
             </Typography>
           )}
         </Box>
