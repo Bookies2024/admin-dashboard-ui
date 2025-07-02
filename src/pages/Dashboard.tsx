@@ -137,7 +137,7 @@ const Dashboard = () => {
                   <Skeleton variant="rectangular" height={40} width="100%" sx={{ borderRadius: 1 }} />
                 </ListItem>
               ))
-              : sessions?.sessions?.map((e: string, i: number) => (
+              : [...sessions?.sessions || []].reverse().map((e: string, i: number) => (
                 <ListItem key={i} disablePadding>
                   <ListItemButton
                     sx={{ borderRadius: 1 }}
