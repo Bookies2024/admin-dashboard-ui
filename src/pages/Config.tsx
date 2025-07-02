@@ -29,6 +29,7 @@ type ConfigRow = {
   key: string;
   value: string;
   footerImage: string;
+  qrPrefix: string;
 };
 
 const Config: React.FC = () => {
@@ -38,6 +39,7 @@ const Config: React.FC = () => {
     key: '',
     value: '',
     footerImage: '',
+    qrPrefix: ''
   });
   const { config: reduxConfig, city } = useSelector((state: RootState) => state.auth);
   const [updateConfig] = useUpdateConfigMutation();
@@ -68,7 +70,10 @@ const Config: React.FC = () => {
       Type: row.type,
       Key: row.key,
       Value: row.value,
-      ...(row.type === 'city' ? { 'Footer Image': row.footerImage } : {}),
+      ...(row.type === 'city' ? {
+        [CONFIG_HEADERS.FOOTER_IMAGE]: row.footerImage,
+        [CONFIG_HEADERS.QR_PREFIX]: row.qrPrefix,
+      } : {}),
     }));
 
     dispatch(setConfig({ config: updated, city }));
@@ -106,7 +111,7 @@ const Config: React.FC = () => {
     const newId = rows.length ? Math.max(...rows.map(r => r.id)) + 1 : 1;
     const newRows = [...rows, { ...newRow, id: newId }];
     await syncAndUpdate(newRows);
-    setNewRow({ type: 'city', key: '', value: '', footerImage: '' });
+    setNewRow({ type: 'city', key: '', value: '', footerImage: '', qrPrefix: '' });
   };
 
   const columns: GridColDef<ConfigRow>[] = useMemo(
@@ -222,6 +227,16 @@ const Config: React.FC = () => {
             value={newRow.footerImage}
             onChange={(e) => setNewRow({ ...newRow, footerImage: e.target.value })}
             sx={{ minWidth: 250 }}
+          />
+        )}
+
+        {newRow.type === 'city' && (
+          <TextField
+            label="QR Prefix"
+            size="small"
+            value={newRow.qrPrefix}
+            onChange={(e) => setNewRow({ ...newRow, qrPrefix: e.target.value })}
+            sx={{ minWidth: 200 }}
           />
         )}
 
