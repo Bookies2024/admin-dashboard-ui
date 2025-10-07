@@ -20,11 +20,15 @@ const Sidebar = () => {
   const city = useSelector((state: RootState) => state.auth.city)
 
   const items = [
-    { title: 'Dashboard', icon: <Dashboard />, path: '/', disabled: true },
-    { title: 'Mass Mail', icon: <MailIcon />, path: '/mail', disabled: false },
-    { title: 'Generate QR', icon: <QrCode />, path: '/qr', disabled: true },
-    { title: 'Config', icon: <Settings />, path: '/config', disabled: true }
+    { title: 'Dashboard', icon: <Dashboard />, path: '/', disabled: false },
+    { title: 'Bulk Mail', icon: <MailIcon />, path: '/mail', disabled: false },
+    { title: 'Generate QR', icon: <QrCode />, path: '/generate-qr', disabled: false },
+    { title: 'Config', icon: <Settings />, path: '/config', disabled: false }
   ];
+
+  const visibleItems = items.filter(item =>
+    item.title !== 'Config' || city?.toLowerCase().includes('mumbai')
+  );
 
   return (
     <Drawer variant="permanent" anchor="left">
@@ -35,22 +39,28 @@ const Sidebar = () => {
           <Typography color='primary' variant='subtitle2'>Reading Community</Typography>
         </Box>
         <List>
-          {items.map((e, i) => {
+          {visibleItems.map((e, i) => {
             const isActive = location.pathname === e.path;
 
             return (
-              <ListItem key={i}>
+              <ListItem key={i} sx={{ color: '403d14' }}>
                 <ListItemButton
                   disabled={e.disabled}
                   onClick={() => navigate(e.path)}
                   sx={{
                     backgroundColor: isActive ? '#403d14' : 'transparent',
-                    '&:hover': { backgroundColor: '#4d4a1a' },
+                    '&:hover': {
+                      backgroundColor: '#4d4a1a',
+                      color: 'white',
+                      '& .MuiListItemIcon-root': {
+                        color: 'white',
+                      }
+                    },
                     borderRadius: 2,
-                    color: !e.disabled ? 'white' : '#403d14'
+                    color: isActive ? 'white' : '#403d14'
                   }}
                 >
-                  <ListItemIcon sx={{ color: !e.disabled ? 'white' : '#403d14' }}>
+                  <ListItemIcon sx={{ color: isActive ? 'white' : '#403d14' }}>
                     {e.icon}
                   </ListItemIcon>
                   <ListItemText primary={e.title} />

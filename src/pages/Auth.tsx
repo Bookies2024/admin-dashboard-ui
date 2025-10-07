@@ -4,35 +4,22 @@ import {
   InputAdornment, InputLabel, MenuItem, OutlinedInput,
   Select, Typography
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import BookiesLogo from "../assets/bookies_logo.png";
-import { getCities, login } from '../api/api';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setConfig } from '../store/auth/auth-slice';
+import { useLoginMutation } from '../store/auth/auth-api-slice';
+import { useGetCitiesQuery } from '../store/app/app-api-slice';
 
 const Auth = () => {
-  const [cities, setCities] = useState<string[] | null>(null);
   const [selectedCity, setSelectedCity] = useState('');
   const [passkey, setPasskey] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: cities, isLoading: isCitiesLoading } = useGetCitiesQuery({})
+  const [login, { isLoading: isLoginLoading }] = useLoginMutation()
   const navigate = useNavigate();
   const dispatch = useDispatch()
-
-  useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-      try {
-        const res = await getCities();
-        if (res) setCities(res);
-      } catch (err) {
-        console.error("Error fetching cities:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
 
   const handleLogin = async () => {
     if (!selectedCity || !passkey) {
@@ -40,16 +27,16 @@ const Auth = () => {
       return;
     }
 
-    setIsLoading(true);
     try {
-      const res = await login(selectedCity, passkey);
-      dispatch(setConfig({ config: res, city: selectedCity }))
-      navigate('/mail');
+      const res = await login({ city: selectedCity, password: passkey }).unwrap()
+      if (!res?.success) {
+        throw new Error("Invalid credentials");
+      }
+      dispatch(setConfig({ config: res.data, city: selectedCity }))
+      navigate('/');
     } catch (err) {
       alert('Login failed. Please check credentials.');
       console.log(err)
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -89,9 +76,9 @@ const Auth = () => {
                 onChange={(e) => setSelectedCity(e.target.value)}
                 sx={{ bgcolor: 'whitesmoke' }}
                 label="Select City"
-                disabled={isLoading}
+                disabled={isCitiesLoading || isLoginLoading}
               >
-                {cities?.map((city) => (
+                {cities?.data?.map((city: string) => (
                   <MenuItem key={city} value={city}>{city}</MenuItem>
                 ))}
               </Select>
@@ -126,9 +113,9 @@ const Auth = () => {
               fullWidth
               sx={{ py: 1.5 }}
               onClick={handleLogin}
-              disabled={isLoading}
+              disabled={isCitiesLoading || isLoginLoading}
             >
-              {isLoading ? "Loading..." : "Continue"}
+              {isCitiesLoading ? "Loading..." : "Continue"}
             </Button>
           </Box>
         </Card>
